@@ -1,0 +1,2 @@
+Jest to pierwszy projekt wykonany na kurs Systemy Operacyjne 2 do Cabaje. Porusza on problematykę obsługi i implementacji wątków, wykorzystując do tego klasę std::thread języka C++.
+Program jest prostą animacją, która przedstawia odbijające się kuleczki w terminalu, w którym po 5 sekundach inicjalizowana jest nowa i zaczyna się przesuwać w losowym z ośmiu kierunków, startując ze środka terminala. Dla efektów specjalnych w postaci kolorków wykorzystano bibliotekę ncurses.
