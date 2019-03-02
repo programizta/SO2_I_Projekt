@@ -1,12 +1,16 @@
 #include <ncurses.h>
 #include <vector>
 #include <ctime>
-#include <unistd.h>
+#include <chrono>
 #include <thread>
+
+int rows = 0;
+int columns = 0;
 
 class Ball
 {
-	char figure = 'o';
+	int horizontalShift = 1;
+	int verticalShift = 1;
 	int xPosition;
 	int yPosition;
 	int direction;
@@ -22,12 +26,13 @@ public:
 		this->yPosition = yPosition;
 		this->velocity = velocity;
 		this->color = color;
+		direction = rand() % 9;
 		moving = false;
 	}
 
 	~Ball() { }
 
-	int GetXPosition()
+	int GetxPosition()
 	{
 		return xPosition;
 	}
@@ -42,40 +47,58 @@ public:
 		moving = true;
 	}
 
-	char GetFigure()
+	void MotionMechanism()
 	{
-		return figure;
+		if(GetxPosition() == 0 || GetxPosition() == rows) horizontalShift = -horizontalShift;
+		if(GetYPosition() == 0 || GetYPosition() == columns) verticalShift = -verticalShift;
+		xPosition += horizontalShift;
+		yPosition += verticalShift;
 	}
 };
 
-int rows = 0;
-int columns = 0;
-bool running = true;
+bool runningLoop = true;
 std::vector<Ball> balls;
-std::vector<std::thread> ballsThreads;
 
-void DrawScene()
+void RenderScene()
 {
-	while(running)
+	while(runningLoop)
 	{
 		clear();
-		getmaxyx(stdscr, rows, columns);
+		//getmaxyx(stdscr, rows, columns);
+
 		for (int i = 0; i < balls.size(); ++i)
 		{
-			mvprintw(balls[i].GetXPosition(), ((balls[i].GetYPosition() / 2) - (sizeof('o' / 2))), "o");
+			mvprintw(balls[i].GetxPosition(), balls[i].GetYPosition(), "o");
 		}
+
 		refresh();
-		// odświeżanie co 0.01s
-		usleep(10000);
+		// odświeżanie
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		for (int i = 0; i < balls.size(); ++i)
+		{
+			balls[i].MotionMechanism();
+		}
 	}
+}
+
+void CreateBall()
+{
+	/*while(runningLoop)
+	{*/
+		getmaxyx(stdscr, rows, columns);
+		balls.push_back(*new Ball(rows / 2, columns / 2, 10, 0));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+		//balls.back().StartMovement();
+	//}
 }
 
 int main(int argc, char const *argv[])
 {
-	Ball *b = new Ball(30, 50, 0, 0);
 	initscr();
+	curs_set(0);
+	CreateBall();
+	RenderScene();
 	getch();
-	endwin();
-
+    endwin();
 	return 0;
 }
