@@ -30,6 +30,7 @@ public:
 		moving = false;
 	}
 
+	
 	~Ball() { }
 
 	int GetxPosition()
@@ -49,8 +50,8 @@ public:
 
 	void MotionMechanism()
 	{
-		if(GetxPosition() == 0 || GetxPosition() == rows) horizontalShift = -horizontalShift;
-		if(GetYPosition() == 0 || GetYPosition() == columns) verticalShift = -verticalShift;
+		if(GetxPosition() == 0 || GetxPosition() == rows - 1) horizontalShift = -horizontalShift;
+		if(GetYPosition() == 0 || GetYPosition() == columns - 1) verticalShift = -verticalShift;
 		xPosition += horizontalShift;
 		yPosition += verticalShift;
 	}
