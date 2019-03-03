@@ -15,7 +15,6 @@ class Ball
 	int yPosition;
 	int direction;
 	int velocity;
-	bool moving;
 	float color;
 
 public:
@@ -27,13 +26,12 @@ public:
 		this->velocity = velocity;
 		this->color = color;
 		direction = rand() % 9;
-		moving = false;
 	}
 
 	
 	~Ball() { }
 
-	int GetxPosition()
+	int GetXPosition()
 	{
 		return xPosition;
 	}
@@ -43,15 +41,96 @@ public:
 		return yPosition;
 	}
 
-	void StartMovement()
+	void MoveRight()
 	{
-		moving = true;
+		horizontalShift = 1;
+		verticalShift = 0;
 	}
 
-	void MotionMechanism()
+	void MoveUpperRight()
 	{
-		if(GetxPosition() == 0 || GetxPosition() == rows - 1) horizontalShift = -horizontalShift;
-		if(GetYPosition() == 0 || GetYPosition() == columns - 1) verticalShift = -verticalShift;
+		horizontalShift = 1;
+		verticalShift = -1;
+	}
+
+	void MoveLowerRight()
+	{
+		horizontalShift = 1;
+		verticalShift = 1;
+	}
+
+	void MoveLeft()
+	{
+		horizontalShift = -1;
+		verticalShift = 0;
+	}
+
+	void MoveUpperLeft()
+	{
+		horizontalShift = -1;
+		verticalShift = -1;		
+	}
+
+	void MoveLowerLeft()
+	{
+		horizontalShift = -1;
+		verticalShift = 1;
+	}
+
+	void MoveUp()
+	{
+		horizontalShift = 0;
+		verticalShift = -1;
+	}
+
+	void MoveDown()
+	{
+		horizontalShift = 0;
+		verticalShift = 1;
+	}
+
+	void ChangeDirection()
+	{
+		if(GetXPosition() == 0)
+		{
+			direction = rand() % 3 + 1;
+			switch(direction)
+			{
+				case 1: MoveRight(); break;
+				case 2: MoveUpperRight(); break;
+				case 3: MoveLowerRight(); break;
+			}
+		}
+		else if(GetXPosition() == rows - 1)
+		{
+			direction = rand() % 3 + 1;
+			switch(direction)
+			{
+				case 1: MoveLeft(); break;
+				case 2: MoveUpperLeft(); break;
+				case 3: MoveLowerLeft(); break;
+			}
+		}
+		else if(GetYPosition() == 0)
+		{
+			direction = rand() % 3 + 1;
+			switch(direction)
+			{
+				case 1: MoveLowerLeft(); break;
+				case 2: MoveDown(); break;
+				case 3: MoveLowerRight(); break;
+			}
+		}
+		else if(GetYPosition() == columns - 1)
+		{
+			direction = rand() % 3 + 1;
+			switch(direction)
+			{
+				case 1: MoveUpperLeft(); break;
+				case 2: MoveUp(); break;
+				case 3: MoveUpperRight(); break;
+			}
+		}
 		xPosition += horizontalShift;
 		yPosition += verticalShift;
 	}
@@ -65,11 +144,9 @@ void RenderScene()
 	while(runningLoop)
 	{
 		clear();
-		//getmaxyx(stdscr, rows, columns);
-
 		for (int i = 0; i < balls.size(); ++i)
 		{
-			mvprintw(balls[i].GetxPosition(), balls[i].GetYPosition(), "o");
+			mvprintw(balls[i].GetXPosition(), balls[i].GetYPosition(), "o");
 		}
 
 		refresh();
@@ -77,24 +154,20 @@ void RenderScene()
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		for (int i = 0; i < balls.size(); ++i)
 		{
-			balls[i].MotionMechanism();
+			balls[i].ChangeDirection();
 		}
 	}
 }
 
 void CreateBall()
 {
-	/*while(runningLoop)
-	{*/
-		getmaxyx(stdscr, rows, columns);
-		balls.push_back(*new Ball(rows / 2, columns / 2, 10, 0));
-		//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-		//balls.back().StartMovement();
-	//}
+	getmaxyx(stdscr, rows, columns);
+	balls.push_back(*new Ball(rows / 2, columns / 2, 10, 0));
 }
 
 int main(int argc, char const *argv[])
 {
+	srand(time(NULL));
 	initscr();
 	curs_set(0);
 	CreateBall();
