@@ -19,17 +19,31 @@ class Ball
 
 public:
 
-	Ball(int xPosition, int yPosition, int velocity, float color)
+	Ball(int xPosition, int yPosition, int velocity)
 	{
+		InitializeDirection(rand() % 8 + 1);
 		this->xPosition = xPosition;
 		this->yPosition = yPosition;
 		this->velocity = velocity;
 		this->color = color;
-		direction = rand() % 9;
 	}
 
-	
 	~Ball() { }
+
+	void InitializeDirection(int choice)
+	{
+		switch(choice)
+		{
+			case 1: MoveLeft(); break;
+			case 2: MoveUpperLeft(); break;
+			case 3: MoveLowerLeft(); break;
+			case 4: MoveRight(); break;
+			case 5: MoveUpperRight(); break;
+			case 6: MoveLowerRight(); break;
+			case 7: MoveUp(); break;
+			case 8: MoveDown(); break;
+		}
+	}
 
 	int GetXPosition()
 	{
@@ -134,10 +148,34 @@ public:
 		xPosition += horizontalShift;
 		yPosition += verticalShift;
 	}
+
+	std::thread MotionThread()
+	{
+		return std::thread(&Ball::ChangeDirection, this);
+	}
 };
 
-bool runningLoop = true;
 std::vector<Ball> balls;
+std::vector<std::thread> threadsOfBalls;
+bool runningLoop = true;
+
+void CreateBall()
+{
+	while(runningLoop)
+	{
+		getmaxyx(stdscr, rows, columns);
+		balls.push_back(*new Ball(rows / 2, columns / 2, 10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(5000));	
+	}
+}
+
+void TerminateAllThreads()
+{
+	for (int i = 0; i < threadsOfBalls.size(); ++i)
+	{
+		threadsOfBalls[i].join();
+	}
+}
 
 void RenderScene()
 {
@@ -159,19 +197,25 @@ void RenderScene()
 	}
 }
 
-void CreateBall()
-{
-	getmaxyx(stdscr, rows, columns);
-	balls.push_back(*new Ball(rows / 2, columns / 2, 10, 0));
-}
-
 int main(int argc, char const *argv[])
 {
+	int numOfBalls = 0;
 	srand(time(NULL));
 	initscr();
 	curs_set(0);
-	CreateBall();
-	RenderScene();
+	std::thread scene(RenderScene);
+	std::thread createBalls(CreateBall);
+	while (numOfBalls < 10)
+	{
+		numOfBalls++;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	}
+	scene.join();
+	createBalls.join();
+	for (int i = 0; i < threadsOfBalls.size(); ++i)
+	{
+		threadsOfBalls[i].join();
+	}
 	getch();
     endwin();
 	return 0;
