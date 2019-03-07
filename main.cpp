@@ -232,6 +232,6 @@ int main(int argc, char const *argv[])
 	createBalls.join();
 	TerminateAllThreads();
 	getch();
-    endwin();
+	endwin();
 	return 0;
 }
