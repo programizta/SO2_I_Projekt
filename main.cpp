@@ -127,9 +127,9 @@ public:
 		while(steps <= 100)
 		{
 			steps++;
+			direction = rand() % 3 + 1;
 			if(GetXPosition() == 0)
 			{
-				direction = rand() % 3 + 1;
 				switch(direction)
 				{
 					case 1: MoveRight(); break;
@@ -139,7 +139,6 @@ public:
 			}
 			else if(GetXPosition() == rows - 1)
 			{
-				direction = rand() % 3 + 1;
 				switch(direction)
 				{
 					case 1: MoveLeft(); break;
@@ -149,7 +148,6 @@ public:
 			}
 			else if(GetYPosition() == 0)
 			{
-				direction = rand() % 3 + 1;
 				switch(direction)
 				{
 					case 1: MoveLowerLeft(); break;
@@ -159,7 +157,6 @@ public:
 			}
 			else if(GetYPosition() == columns - 1)
 			{
-				direction = rand() % 3 + 1;
 				switch(direction)
 				{
 					case 1: MoveUpperLeft(); break;
@@ -168,7 +165,7 @@ public:
 				}
 			}
 			DisplaceBall();
-			std::this_thread::sleep_for(std::chrono::milliseconds(velocity));
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 	}
 
@@ -188,6 +185,7 @@ void CreateBall()
 	{
 		getmaxyx(stdscr, rows, columns);
 		balls.push_back(*new Ball(rows / 2, columns / 2, rand() % 3 + 1));
+		threadsOfBalls.push_back(balls.back().MotionThread());
 		std::this_thread::sleep_for(std::chrono::milliseconds(5000));	
 	}
 }
@@ -212,11 +210,7 @@ void RenderScene()
 
 		refresh();
 		// odświeżanie
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		for (int i = 0; i < balls.size(); ++i)
-		{
-			balls[i].ChangeDirection();
-		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
 }
 
