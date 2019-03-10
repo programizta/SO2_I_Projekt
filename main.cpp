@@ -6,6 +6,7 @@
 
 int rows = 0;
 int columns = 0;
+bool runningLoop = true;
 
 class Ball
 {
@@ -15,17 +16,15 @@ class Ball
 	int yPosition;
 	int direction;
 	int velocity;
-	int steps;
 
 public:
 
-	Ball(int xPosition, int yPosition, int velocityChoice)
+	Ball(int xPosition, int yPosition)
 	{
 		this->xPosition = xPosition;
 		this->yPosition = yPosition;
 		InitializeDirection(rand() % 8 + 1);
-		InitializeSpeed(velocityChoice);
-		steps = 0;
+		InitializeSpeed(rand() % 3 + 1);
 	}
 
 	~Ball() { }
@@ -124,9 +123,8 @@ public:
 
 	void ChangeDirection()
 	{
-		while(steps <= 100)
+		while(runningLoop)
 		{
-			steps++;
 			direction = rand() % 3 + 1;
 			if(GetXPosition() == 0)
 			{
@@ -165,7 +163,7 @@ public:
 				}
 			}
 			DisplaceBall();
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			std::this_thread::sleep_for(std::chrono::milliseconds(this->velocity));
 		}
 	}
 
@@ -175,18 +173,17 @@ public:
 	}
 };
 
-std::vector<Ball> balls;
+std::vector<Ball*> balls;
 std::vector<std::thread> threadsOfBalls;
-bool runningLoop = true;
 
 void CreateBall()
 {
 	while(runningLoop)
 	{
 		getmaxyx(stdscr, rows, columns);
-		balls.push_back(*new Ball(rows / 2, columns / 2, rand() % 3 + 1));
-		threadsOfBalls.push_back(balls.back().MotionThread());
-		std::this_thread::sleep_for(std::chrono::milliseconds(5000));	
+		balls.push_back(new Ball(rows / 2, columns / 2));
+		threadsOfBalls.push_back(balls.back()->MotionThread());
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));	
 	}
 }
 
@@ -198,6 +195,12 @@ void TerminateAllThreads()
 	}
 }
 
+void PressKeyToEnd()
+{
+	if(getch() == 127) runningLoop = false;
+	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+
 void RenderScene()
 {
 	while(runningLoop)
@@ -205,7 +208,7 @@ void RenderScene()
 		clear();
 		for (int i = 0; i < balls.size(); ++i)
 		{
-			mvprintw(balls[i].GetXPosition(), balls[i].GetYPosition(), "o");
+			mvprintw(balls[i]->GetXPosition(), balls[i]->GetYPosition(), "o");
 		}
 
 		refresh();
@@ -216,15 +219,20 @@ void RenderScene()
 
 int main(int argc, char const *argv[])
 {
-	int numOfBalls = 0;
 	srand(time(NULL));
 	initscr();
 	curs_set(0);
 	std::thread scene(RenderScene);
 	std::thread createBalls(CreateBall);
-	scene.join();
-	createBalls.join();
-	TerminateAllThreads();
+	std::thread exitProgram(PressKeyToEnd);
+
+	if(!runningLoop)
+	{
+		scene.join();
+		createBalls.join();
+		exitProgram.join();
+		TerminateAllThreads();
+	}
 	getch();
 	endwin();
 	return 0;
