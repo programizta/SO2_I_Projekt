@@ -1,8 +1,20 @@
-#include <ncurses.h>
-#include <vector>
-#include <ctime>
-#include <chrono>
 #include <thread>
+#include <vector>
+#include <chrono>
+#include <random>
+#include <ncurses.h>
+
+thread_local std::mt19937 gen{ std::random_device{}() };
+
+template<typename var>
+var random(var min, var max) {
+	using dist = std::conditional_t<
+		std::is_integral<var>::value,
+		std::uniform_int_distribution<var>,
+		std::uniform_real_distribution<var>
+	>;
+	return dist{ min, max }(gen);
+}
 
 int rows = 0;
 int columns = 0;
@@ -16,7 +28,6 @@ class Ball
 	int yPosition;
 	int direction;
 	int velocity;
-	int choiceSpeed;
 
 public:
 
@@ -24,11 +35,9 @@ public:
 	{
 		this->xPosition = xPosition;
 		this->yPosition = yPosition;
-		InitializeDirection(rand() % 8 + 1);
+		InitializeDirection(random(1, 8));
 		// tu jest coś nie tak, napraw prędkość!
-		this->choiceSpeed = rand() % 3 + 1;
-		InitializeSpeed(choiceSpeed);
-		
+		InitializeSpeed(random(1, 3));
 	}
 
 	~Ball() { }
@@ -53,11 +62,11 @@ public:
 		switch(choice)
 		{
 			// bardzo szybko
-			case 1: this->velocity = 50;
+			case 1: velocity = 50;
 			// wolniej
-			case 2: this->velocity = 100;
+			case 2: velocity = 150;
 			// najwolniej
-			case 3: this->velocity = 200;
+			case 3: velocity = 250;
 		}
 	}
 
@@ -129,7 +138,7 @@ public:
 	{
 		while(runningLoop)
 		{
-			direction = rand() % 3 + 1;
+			direction = random(1, 3);
 			if(GetXPosition() == 0)
 			{
 				switch(direction)
@@ -166,8 +175,8 @@ public:
 					case 3: MoveUpperRight(); break;
 				}
 			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			DisplaceBall();
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->velocity));
 		}
 	}
 
@@ -187,7 +196,7 @@ void CreateBall()
 		getmaxyx(stdscr, rows, columns);
 		balls.push_back(new Ball(rows / 2, columns / 2));
 		threadsOfBalls.push_back(balls.back()->MotionThread());
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));	
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));	
 	}
 }
 
@@ -224,13 +233,11 @@ void RenderScene()
 
 int main(int argc, char const *argv[])
 {
-	srand(time(NULL));
 	initscr();
 	curs_set(0);
 	std::thread scene(RenderScene);
 	std::thread createBalls(CreateBall);
 	std::thread exitProgram(PressKeyToEnd);
-
 
 	// zawieszanie wątku głównego dopóki nie wciśnięto klawisza
 	while(runningLoop) { std::this_thread::sleep_for(std::chrono::milliseconds(500)); }
