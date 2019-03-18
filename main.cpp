@@ -40,7 +40,7 @@ public:
 		this->xPosition = xPosition;
 		this->yPosition = yPosition;
 		InitializeDirection(random(1, 8));
-		InitializeSpeed(random(1, 3));
+		InitializeSpeed(random(100, 300));
 	}
 
 	~Ball() { }
@@ -62,15 +62,9 @@ public:
 
 	void InitializeSpeed(int choice)
 	{
-		switch(choice)
-		{
-			// bardzo szybko
-			case 1: velocity = 50;
-			// wolniej
-			case 2: velocity = 150;
-			// najwolniej
-			case 3: velocity = 250;
-		}
+		if(choice % 3 == 0) velocity = 50;
+		else if(choice % 3 == 1) velocity = 150;
+		else velocity = 200;
 	}
 
 	int GetXPosition()
@@ -178,7 +172,7 @@ public:
 					case 3: MoveUpperRight(); break;
 				}
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			std::this_thread::sleep_for(std::chrono::milliseconds(velocity));
 			DisplaceBall();
 		}
 	}
@@ -199,7 +193,7 @@ void CreateBall()
 		getmaxyx(stdscr, rows, columns);
 		balls.push_back(new Ball(rows / 2, columns / 2));
 		threadsOfBalls.push_back(balls.back()->MotionThread());
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));	
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	}
 }
 
@@ -213,9 +207,13 @@ void TerminateThreadsOfBalls()
 
 void PressKeyToEnd()
 {
-	// zakończ program na wciśnięcie klawisza
-	while(getch() == 13) { std::this_thread::sleep_for(std::chrono::milliseconds(20)); }
-	runningLoop = false;
+	// zakończ program gdy wciśnięto klawisz [ENTER]
+	while(runningLoop)
+	{
+		char key = getchar();
+		if (key == 13) runningLoop = false;
+		else std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	}
 }
 
 void RenderScene()
@@ -242,7 +240,7 @@ int main(int argc, char const *argv[])
 	std::thread createBalls(CreateBall);
 	std::thread exitProgram(PressKeyToEnd);
 
-	// zawieszanie wątku głównego dopóki nie wciśnięto klawisza
+	// zawieszanie wątku głównego dopóki animacja trwa
 	while(runningLoop) { std::this_thread::sleep_for(std::chrono::milliseconds(500)); }
 	TerminateThreadsOfBalls();
 	scene.join();
