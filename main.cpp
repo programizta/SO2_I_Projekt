@@ -6,6 +6,8 @@
 
 thread_local std::mt19937 gen{ std::random_device{}() };
 
+// szablonik funkcji do generowania liczb
+// zgodnie z rozkładem jednostajnym
 template<typename var>
 var random(var min, var max) {
 	using dist = std::conditional_t<
@@ -22,8 +24,8 @@ bool runningLoop = true;
 
 class Ball
 {
-	int horizontalShift = 1;
-	int verticalShift = 1;
+	int horizontalShift;
+	int verticalShift;
 	int xPosition;
 	int yPosition;
 	int direction;
@@ -33,10 +35,11 @@ public:
 
 	Ball(int xPosition, int yPosition)
 	{
+		horizontalShift = 1;
+		verticalShift = 1;
 		this->xPosition = xPosition;
 		this->yPosition = yPosition;
 		InitializeDirection(random(1, 8));
-		// tu jest coś nie tak, napraw prędkość!
 		InitializeSpeed(random(1, 3));
 	}
 
@@ -134,7 +137,7 @@ public:
 		yPosition += verticalShift;
 	}
 
-	void ChangeDirection()
+	void BallReflection()
 	{
 		while(runningLoop)
 		{
@@ -182,7 +185,7 @@ public:
 
 	std::thread MotionThread()
 	{
-		return std::thread(&Ball::ChangeDirection, this);
+		return std::thread(&Ball::BallReflection, this);
 	}
 };
 
@@ -200,7 +203,7 @@ void CreateBall()
 	}
 }
 
-void TerminateBallThreads()
+void TerminateThreadsOfBalls()
 {
 	for (int i = 0; i < threadsOfBalls.size(); ++i)
 	{
@@ -241,7 +244,7 @@ int main(int argc, char const *argv[])
 
 	// zawieszanie wątku głównego dopóki nie wciśnięto klawisza
 	while(runningLoop) { std::this_thread::sleep_for(std::chrono::milliseconds(500)); }
-	TerminateBallThreads();
+	TerminateThreadsOfBalls();
 	scene.join();
 	createBalls.join();
 	exitProgram.join();
