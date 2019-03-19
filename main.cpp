@@ -135,45 +135,11 @@ public:
 	{
 		while(runningLoop)
 		{
-			direction = random(1, 3);
-			if(GetXPosition() == 0)
-			{
-				switch(direction)
-				{
-					case 1: MoveRight(); break;
-					case 2: MoveUpperRight(); break;
-					case 3: MoveLowerRight(); break;
-				}
-			}
-			else if(GetXPosition() == rows - 1)
-			{
-				switch(direction)
-				{
-					case 1: MoveLeft(); break;
-					case 2: MoveUpperLeft(); break;
-					case 3: MoveLowerLeft(); break;
-				}
-			}
-			else if(GetYPosition() == 0)
-			{
-				switch(direction)
-				{
-					case 1: MoveLowerLeft(); break;
-					case 2: MoveDown(); break;
-					case 3: MoveLowerRight(); break;
-				}
-			}
-			else if(GetYPosition() == columns - 1)
-			{
-				switch(direction)
-				{
-					case 1: MoveUpperLeft(); break;
-					case 2: MoveUp(); break;
-					case 3: MoveUpperRight(); break;
-				}
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(velocity));
+			// lustrzane odbicia kulek
+			if(GetXPosition() == 0 || GetXPosition() == rows - 1) horizontalShift = -horizontalShift;
+			if(GetYPosition() == 0 || GetYPosition() == columns - 1) verticalShift = -verticalShift;
 			DisplaceBall();
+			std::this_thread::sleep_for(std::chrono::milliseconds(velocity));
 		}
 	}
 
@@ -207,11 +173,14 @@ void TerminateThreadsOfBalls()
 
 void PressKeyToEnd()
 {
-	// zakończ program gdy wciśnięto klawisz [ENTER]
+	// zakończ program gdy wciśnięto klawisz 'q'
 	while(runningLoop)
 	{
-		char key = getchar();
-		if (key == 13) runningLoop = false;
+		cbreak();
+		noecho();
+		// kurłaaaa nie wolno getchar()!
+		char key = getch();
+		if (key == 'q') runningLoop = false;
 		else std::this_thread::sleep_for(std::chrono::milliseconds(20));
 	}
 }
@@ -240,11 +209,9 @@ int main(int argc, char const *argv[])
 	std::thread createBalls(CreateBall);
 	std::thread exitProgram(PressKeyToEnd);
 
-	// zawieszanie wątku głównego dopóki animacja trwa
-	while(runningLoop) { std::this_thread::sleep_for(std::chrono::milliseconds(500)); }
-	TerminateThreadsOfBalls();
 	scene.join();
 	createBalls.join();
+	TerminateThreadsOfBalls();
 	exitProgram.join();
 	endwin();
 	return 0;
